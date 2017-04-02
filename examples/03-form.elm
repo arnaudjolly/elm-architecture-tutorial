@@ -21,13 +21,13 @@ type alias Model =
   , password : String
   , passwordAgain : String
   , age : String
-  , validation: Bool
+  , validation : (Bool, List String)
   }
 
 
 model : Model
 model =
-  Model "" "" "" "" False
+  Model "" "" "" "" (True, [])
 
 
 
@@ -58,7 +58,7 @@ update msg model =
       { model | age = age }
 
     Submit ->
-      { model | validation = True }
+      { model | validation = validate model }
 
 -- VIEW
 
@@ -75,16 +75,20 @@ view model =
     ]
 
 
+validationColor : Bool -> String
+validationColor ok =
+    if ok then
+        "green"
+    else
+        "red"
+
+
 viewValidation : Model -> Html msg
 viewValidation model =
-  if not model.validation then
-    div [] [ text "" ]
-  else
-      let
-        (color, messages) =
-            validate model
-      in
-        div [ style [("color", color)] ] [ viewMessages messages ]
+    let
+        (ok, messages) = model.validation
+    in
+        div [ style [("color", validationColor ok)] ] [ viewMessages messages ]
 
 
 viewMessages : List String -> Html msg
@@ -105,7 +109,7 @@ activeValidations =
     ]
 
 
-validate : Model -> (String, List String)
+validate : Model -> (Bool, List String)
 validate model =
     let
         errors =
@@ -114,9 +118,9 @@ validate model =
                 activeValidations
     in
         if List.isEmpty errors then
-            ("green", ["OK"])
+            (True, ["OK"])
         else
-            ("red", errors)
+            (False, errors)
 
 identicalPasswords : Model -> Maybe String
 identicalPasswords model =
