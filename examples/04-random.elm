@@ -1,5 +1,6 @@
 import Html exposing (..)
 import Html.Events exposing (..)
+import Html.Attributes exposing (..)
 import Random
 
 
@@ -18,13 +19,14 @@ main =
 
 
 type alias Model =
-  { dieFace : Int
+  { dieFace1 : Int
+  , dieFace2 : Int
   }
 
 
 init : (Model, Cmd Msg)
 init =
-  (Model 1, Cmd.none)
+  (Model 1 1, Cmd.none)
 
 
 
@@ -33,17 +35,17 @@ init =
 
 type Msg
   = Roll
-  | NewFace Int
+  | NewFaces (Int, Int)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Roll ->
-      (model, Random.generate NewFace (Random.int 1 6))
+      (model, Random.generate NewFaces (Random.pair (Random.int 1 6) (Random.int 1 6)))
 
-    NewFace newFace ->
-      (Model newFace, Cmd.none)
+    NewFaces (newFace1, newFace2) ->
+      (Model newFace1 newFace2, Cmd.none)
 
 
 
@@ -62,6 +64,11 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div []
-    [ h1 [] [ text (toString model.dieFace) ]
+    [ img [src (getImgUrl model.dieFace1)] []
+    , img [src (getImgUrl model.dieFace2)] []
     , button [ onClick Roll ] [ text "Roll" ]
     ]
+
+getImgUrl : Int -> String
+getImgUrl dieFace =
+    "http://www.speedymath.com/images/dice/" ++ toString dieFace ++ "-border.gif"
