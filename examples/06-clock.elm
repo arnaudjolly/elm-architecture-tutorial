@@ -1,4 +1,5 @@
-import Html exposing (Html)
+import Html exposing (Html, div, button)
+import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Time exposing (Time, second)
@@ -18,12 +19,15 @@ main =
 -- MODEL
 
 
-type alias Model = Time
+type alias Model =
+    { time : Time
+    , on : Bool
+    }
 
 
 init : (Model, Cmd Msg)
 init =
-  (0, Cmd.none)
+  (Model 0 True, Cmd.none)
 
 
 
@@ -32,14 +36,17 @@ init =
 
 type Msg
   = Tick Time
+  | ToggleSubs
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Tick newTime ->
-      (newTime, Cmd.none)
+      ({model | time = newTime }, Cmd.none)
 
+    ToggleSubs ->
+      ({model | on = not model.on}, Cmd.none)
 
 
 -- SUBSCRIPTIONS
@@ -47,8 +54,10 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Time.every second Tick
-
+    if model.on then
+        Time.every second Tick
+    else
+        Sub.none
 
 
 -- VIEW
@@ -57,16 +66,42 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   let
-    angle =
-      turns (Time.inMinutes model)
+    (sHandX, sHandY) =
+        handPosition 40 Time.inMinutes model.time
 
-    handX =
-      toString (50 + 40 * cos angle)
+    (mHandX, mHandY) =
+        handPosition 30 Time.inHours model.time
 
-    handY =
-      toString (50 + 40 * sin angle)
+    (hHandX, hHandY) =
+        handPosition 20 inDays model.time
+
   in
-    svg [ viewBox "0 0 100 100", width "300px" ]
-      [ circle [ cx "50", cy "50", r "45", fill "#0B79CE" ] []
-      , line [ x1 "50", y1 "50", x2 handX, y2 handY, stroke "#023963" ] []
-      ]
+    div []
+     [ button [ onClick ToggleSubs ] [ text "Pause Time" ]
+     , svg [ viewBox "0 0 100 100", width "300px" ]
+        [ circle [ cx "50", cy "50", r "45", fill "#0B79CE" ] []
+        , line [ x1 "50", y1 "50", x2 sHandX, y2 sHandY, stroke "yellow" ] []
+        , line [ x1 "50", y1 "50", x2 mHandX, y2 mHandY, stroke "red" ] []
+        , line [ x1 "50", y1 "50", x2 hHandX, y2 hHandY, stroke "pink" ] []
+        ]
+     ]
+
+inDays : Time -> Float
+inDays t =
+    {- add 2 hours since i'm on a GMT+2 place -}
+    (t + 2 * Time.hour) / (12 * Time.hour)
+
+handPosition : Float -> (Time -> Float) -> Time ->  (String, String)
+handPosition handLength timeConverter time =
+    let
+        {- minus 1/4 turn to make 0h be at top -}
+        angle =
+            turns (timeConverter time) - turns 0.25
+
+        handX =
+            toString (50 + handLength * cos angle)
+
+        handY =
+            toString (50 + handLength * sin angle)
+    in
+        (handX, handY)
