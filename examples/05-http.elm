@@ -39,6 +39,7 @@ init topic =
 
 type Msg
   = MorePlease
+  | Topic String
   | NewGif (Result Http.Error String)
 
 
@@ -47,6 +48,9 @@ update msg model =
   case msg of
     MorePlease ->
       (model, getRandomGif model.topic)
+
+    Topic topic ->
+      ({model | topic = topic}, getRandomGif topic)
 
     NewGif (Ok newUrl) ->
       (Model model.topic newUrl "", Cmd.none)
@@ -80,7 +84,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
   div []
-    [ h2 [] [text model.topic]
+    [ input [ type_ "text", placeholder "topic", onInput Topic, value model.topic ] []
     , button [ onClick MorePlease ] [ text "More Please!" ]
     , span [ style [ ("color", "red") ] ] [ text model.error ]
     , br [] []
