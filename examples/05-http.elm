@@ -23,15 +23,19 @@ type alias Model =
   { topic : String
   , gifUrl : String
   , error : String
+  , availableTopics : List String
   }
 
 
 init : String -> (Model, Cmd Msg)
 init topic =
-  ( Model topic "waiting.gif" ""
+  ( Model topic "waiting.gif" "" topics
   , getRandomGif topic
   )
 
+
+topics : List String
+topics = [ "cats", "cars", "dogs", "christmas", "easter"]
 
 
 -- UPDATE
@@ -53,7 +57,7 @@ update msg model =
       ({model | topic = topic}, getRandomGif topic)
 
     NewGif (Ok newUrl) ->
-      (Model model.topic newUrl "", Cmd.none)
+      ({model | gifUrl = newUrl, error = "" }, Cmd.none)
 
     NewGif (Err err) ->
         let
@@ -80,18 +84,24 @@ update msg model =
 
 -- VIEW
 
-
 view : Model -> Html Msg
 view model =
   div []
-    [ input [ type_ "text", placeholder "topic", onInput Topic, value model.topic ] []
+    [
+      select [ onInput Topic, value model.topic ] (renderOptions model)
     , button [ onClick MorePlease ] [ text "More Please!" ]
     , span [ style [ ("color", "red") ] ] [ text model.error ]
     , br [] []
     , img [src model.gifUrl] []
     ]
 
-
+renderOptions : Model -> List (Html Msg)
+renderOptions model =
+    let
+        renderOption opt =
+            option [ selected (opt == model.topic), value opt ] [ text opt ]
+    in
+        List.map renderOption model.availableTopics
 
 -- SUBSCRIPTIONS
 
