@@ -88,20 +88,21 @@ view : Model -> Html Msg
 view model =
   div []
     [
-      select [ onInput Topic, value model.topic ] (renderOptions model)
+      renderTopicSelection model
     , button [ onClick MorePlease ] [ text "More Please!" ]
     , span [ style [ ("color", "red") ] ] [ text model.error ]
     , br [] []
     , img [src model.gifUrl] []
     ]
 
-renderOptions : Model -> List (Html Msg)
-renderOptions model =
+renderTopicSelection : Model -> Html Msg
+renderTopicSelection model =
     let
         renderOption opt =
             option [ selected (opt == model.topic), value opt ] [ text opt ]
     in
-        List.map renderOption model.availableTopics
+        select [ onInput Topic, value model.topic ]
+            (List.map renderOption model.availableTopics)
 
 -- SUBSCRIPTIONS
 
