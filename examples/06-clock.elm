@@ -73,7 +73,7 @@ view model =
         handPosition 30 Time.inHours model.time
 
     (hHandX, hHandY) =
-        handPosition 20 inDays model.time
+        handPosition 20 inHalfDays model.time
 
   in
     div []
@@ -86,8 +86,9 @@ view model =
         ]
      ]
 
-inDays : Time -> Float
-inDays t =
+{- number of turns for the hour hand -}
+inHalfDays : Time -> Float
+inHalfDays t =
     {- add 2 hours since i'm on a GMT+2 place -}
     (t + 2 * Time.hour) / (12 * Time.hour)
 
