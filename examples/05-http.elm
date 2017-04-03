@@ -1,7 +1,7 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Http
+import Http exposing (..)
 import Json.Decode as Decode
 
 
@@ -22,12 +22,13 @@ main =
 type alias Model =
   { topic : String
   , gifUrl : String
+  , error : String
   }
 
 
 init : String -> (Model, Cmd Msg)
 init topic =
-  ( Model topic "waiting.gif"
+  ( Model topic "waiting.gif" ""
   , getRandomGif topic
   )
 
@@ -48,10 +49,28 @@ update msg model =
       (model, getRandomGif model.topic)
 
     NewGif (Ok newUrl) ->
-      (Model model.topic newUrl, Cmd.none)
+      (Model model.topic newUrl "", Cmd.none)
 
-    NewGif (Err _) ->
-      (model, Cmd.none)
+    NewGif (Err err) ->
+        let
+            errmsg =
+                case err of
+                    BadUrl m ->
+                        m
+
+                    Timeout ->
+                        "timeout !"
+
+                    NetworkError ->
+                        "network error!"
+
+                    BadStatus response ->
+                        response.status.message
+
+                    BadPayload s response ->
+                        s ++ " with body: " ++ response.body
+        in
+            ({ model | error = errmsg } , Cmd.none)
 
 
 
@@ -63,6 +82,7 @@ view model =
   div []
     [ h2 [] [text model.topic]
     , button [ onClick MorePlease ] [ text "More Please!" ]
+    , span [ style [ ("color", "red") ] ] [ text model.error ]
     , br [] []
     , img [src model.gifUrl] []
     ]
